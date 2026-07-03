@@ -1,9 +1,9 @@
 --[[
     ╔═══════════════════════════════════════════════════════════════╗
-    ║    DELTA MACRO & REPLAY HUB v2.0 - MOBILE OPTIMIZED           ║
+    ║    DELTA MACRO & REPLAY HUB v2.1 - FIXED MOBILE VERSION       ║
     ║    Professional Macro Recorder with Modern Hub UI              ║
     ║    File: MacroHub_v2_Mobile.lua                               ║
-    ║    Platform: Delta Executor (PC & Mobile)                     ║
+    ║    Platform: Delta Executor (PC & Mobile) - FIXED             ║
     ╚═══════════════════════════════════════════════════════════════╝
 ]]
 
@@ -25,7 +25,8 @@ local Camera = workspace.CurrentCamera
 local IsMobile = UserInputService.TouchEnabled
 local ScreenSize = Camera.ViewportSize
 
-print("[MacroHub] Platform: " .. (IsMobile and "📱 MOBILE" or "🖥️ PC"))
+print("[MacroHub] ✓ Device: " .. (IsMobile and "📱 MOBILE" or "🖥️ PC"))
+print("[MacroHub] ✓ Resolution: " .. ScreenSize.X .. "x" .. ScreenSize.Y)
 
 -- CONFIG
 local CONFIG = {
@@ -407,20 +408,26 @@ end
 
 local GUI = {}
 GUI.mainFrame = nil
+GUI.screenGui = nil
 GUI.isOpen = true
 GUI.tabButtons = {}
 GUI.currentTab = "Record"
 
 function GUI:Create()
+    -- Create ScreenGui with correct properties
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "MacroHubGui"
     screenGui.ResetOnSpawn = false
     screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    screenGui.Parent = Player:WaitForChild("PlayerGui")
     
-    local width = IsMobile and 400 or 500
-    local height = IsMobile and 550 or 600
+    -- Wait for PlayerGui to load
+    local playerGui = Player:WaitForChild("PlayerGui")
+    screenGui.Parent = playerGui
     
+    local width = IsMobile and 380 or 500
+    local height = IsMobile and 520 or 600
+    
+    -- Main Frame
     local mainFrame = Instance.new("Frame")
     mainFrame.Name = "MainFrame"
     mainFrame.Size = UDim2.new(0, width, 0, height)
@@ -428,6 +435,7 @@ function GUI:Create()
     mainFrame.BackgroundColor3 = COLORS.BG_PRIMARY
     mainFrame.BorderSizePixel = 0
     mainFrame.CornerRadius = UDim.new(0, 15)
+    mainFrame.ClipsDescendants = true
     mainFrame.Parent = screenGui
     
     -- TOP BAR
@@ -436,22 +444,24 @@ function GUI:Create()
     topBar.Size = UDim2.new(1, 0, 0, 50)
     topBar.BackgroundColor3 = COLORS.BG_SECONDARY
     topBar.BorderSizePixel = 0
+    topBar.CornerRadius = UDim.new(0, 15)
     topBar.Parent = mainFrame
     
     local title = Instance.new("TextLabel")
-    title.Size = UDim2.new(1, -100, 1, 0)
+    title.Size = UDim2.new(0.7, 0, 1, 0)
     title.Position = UDim2.new(0, 15, 0, 0)
     title.BackgroundTransparency = 1
     title.Text = "MACRO HUB"
     title.TextColor3 = COLORS.NEON_PURPLE
-    title.TextSize = IsMobile and 14 or 18
+    title.TextSize = 16
     title.Font = Enum.Font.GothamBold
     title.TextXAlignment = Enum.TextXAlignment.Left
     title.Parent = topBar
     
     local minimizeBtn = Instance.new("TextButton")
-    minimizeBtn.Size = UDim2.new(0, 40, 0, 40)
-    minimizeBtn.Position = UDim2.new(1, -90, 0.5, -20)
+    minimizeBtn.Name = "MinimizeBtn"
+    minimizeBtn.Size = UDim2.new(0, 38, 0, 38)
+    minimizeBtn.Position = UDim2.new(1, -88, 0.5, -19)
     minimizeBtn.BackgroundColor3 = COLORS.BG_PRIMARY
     minimizeBtn.TextColor3 = COLORS.TEXT_PRIMARY
     minimizeBtn.Text = "−"
@@ -463,12 +473,13 @@ function GUI:Create()
     minimizeBtn.Parent = topBar
     
     local closeBtn = Instance.new("TextButton")
-    closeBtn.Size = UDim2.new(0, 40, 0, 40)
-    closeBtn.Position = UDim2.new(1, -40, 0.5, -20)
+    closeBtn.Name = "CloseBtn"
+    closeBtn.Size = UDim2.new(0, 38, 0, 38)
+    closeBtn.Position = UDim2.new(1, -42, 0.5, -19)
     closeBtn.BackgroundColor3 = COLORS.ERROR
     closeBtn.TextColor3 = COLORS.TEXT_PRIMARY
     closeBtn.Text = "✕"
-    closeBtn.TextSize = 18
+    closeBtn.TextSize = 16
     closeBtn.Font = Enum.Font.GothamBold
     closeBtn.BorderSizePixel = 0
     closeBtn.CornerRadius = UDim.new(0, 8)
@@ -482,20 +493,21 @@ function GUI:Create()
     tabBar.Position = UDim2.new(0, 0, 0, 50)
     tabBar.BackgroundColor3 = COLORS.BG_SECONDARY
     tabBar.BorderSizePixel = 0
+    tabBar.CornerRadius = UDim.new(0, 0)
     tabBar.Parent = mainFrame
     
     local tabs = {"Record", "Replay", "Storage", "Shortcut", "Settings"}
-    local tabWidth = width / #tabs - 2
+    local tabWidth = width / #tabs
     
     for i, tabName in ipairs(tabs) do
         local tabBtn = Instance.new("TextButton")
         tabBtn.Name = tabName .. "Tab"
         tabBtn.Size = UDim2.new(0, tabWidth, 1, 0)
-        tabBtn.Position = UDim2.new(0, (i-1) * (tabWidth + 2), 0, 0)
+        tabBtn.Position = UDim2.new(0, (i-1) * tabWidth, 0, 0)
         tabBtn.BackgroundColor3 = (i == 1) and COLORS.NEON_PURPLE or COLORS.BG_PRIMARY
         tabBtn.TextColor3 = COLORS.TEXT_PRIMARY
-        tabBtn.Text = IsMobile and tabName:sub(1, 3) or tabName
-        tabBtn.TextSize = IsMobile and 9 or 12
+        tabBtn.Text = tabName
+        tabBtn.TextSize = 10
         tabBtn.Font = Enum.Font.GothamBold
         tabBtn.BorderSizePixel = 0
         tabBtn.AutoButtonColor = false
@@ -534,7 +546,10 @@ function GUI:Create()
     end)
     
     self.mainFrame = mainFrame
+    self.screenGui = screenGui
     Storage:LoadAllMacros()
+    
+    print("[MacroHub] ✓ GUI Created!")
 end
 
 function GUI:CreateButton(text, width, height, bgColor)
@@ -543,7 +558,7 @@ function GUI:CreateButton(text, width, height, bgColor)
     button.BackgroundColor3 = bgColor
     button.TextColor3 = COLORS.TEXT_PRIMARY
     button.Text = text
-    button.TextSize = 12
+    button.TextSize = 11
     button.Font = Enum.Font.GothamBold
     button.BorderSizePixel = 0
     button.CornerRadius = UDim.new(0, 6)
@@ -576,7 +591,7 @@ function GUI:CreateRecordTab(parent)
     timerLabel.BackgroundColor3 = COLORS.BG_SECONDARY
     timerLabel.TextColor3 = COLORS.NEON_BLUE
     timerLabel.Text = "00:00:00.00"
-    timerLabel.TextSize = 22
+    timerLabel.TextSize = 20
     timerLabel.Font = Enum.Font.GothamBold
     timerLabel.BorderSizePixel = 0
     timerLabel.CornerRadius = UDim.new(0, 8)
@@ -591,35 +606,29 @@ function GUI:CreateRecordTab(parent)
     end)
     table.insert(State.connections, timerConnection)
     
-    local startBtn = self:CreateButton("START", 80, 45, COLORS.SUCCESS)
-    startBtn.Position = UDim2.new(0, 20, 0, 70)
+    local startBtn = self:CreateButton("START", 75, 40, COLORS.SUCCESS)
+    startBtn.Position = UDim2.new(0, 20, 0, 65)
     startBtn.Parent = tabFrame
-    startBtn.TextSize = 11
     
-    local stopBtn = self:CreateButton("STOP", 80, 45, COLORS.BG_SECONDARY)
-    stopBtn.Position = UDim2.new(0, IsMobile and 110 or 130, 0, 70)
+    local stopBtn = self:CreateButton("STOP", 75, 40, COLORS.ERROR)
+    stopBtn.Position = UDim2.new(0, 105, 0, 65)
     stopBtn.Parent = tabFrame
-    stopBtn.TextSize = 11
     
     startBtn.MouseButton1Click:Connect(function()
         if not State.isRecording then
             Recorder:Start()
-            startBtn.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
-            stopBtn.BackgroundColor3 = COLORS.ERROR
         end
     end)
     
     stopBtn.MouseButton1Click:Connect(function()
         if State.isRecording then
             Recorder:Stop()
-            startBtn.BackgroundColor3 = COLORS.SUCCESS
-            stopBtn.BackgroundColor3 = COLORS.BG_SECONDARY
         end
     end)
     
     local speedoLabel = Instance.new("TextLabel")
     speedoLabel.Size = UDim2.new(1, -20, 0, 30)
-    speedoLabel.Position = UDim2.new(0, 10, 0, 135)
+    speedoLabel.Position = UDim2.new(0, 10, 0, 115)
     speedoLabel.BackgroundColor3 = COLORS.BG_SECONDARY
     speedoLabel.TextColor3 = COLORS.TEXT_PRIMARY
     speedoLabel.Text = "Speed: 0.0 Stud/s"
@@ -632,7 +641,7 @@ function GUI:CreateRecordTab(parent)
     local speedConnection
     speedConnection = RunService.Heartbeat:Connect(function()
         local speed = Humanoid.Velocity.Magnitude
-        speedoLabel.Text = string.format("Speed: %.1f", speed)
+        speedoLabel.Text = string.format("Speed: %.1f Stud/s", speed)
     end)
     table.insert(State.connections, speedConnection)
 end
@@ -650,7 +659,7 @@ function GUI:CreateReplayTab(parent)
     speedLabel.Position = UDim2.new(0, 10, 0, 10)
     speedLabel.BackgroundTransparency = 1
     speedLabel.TextColor3 = COLORS.TEXT_PRIMARY
-    speedLabel.Text = "Speed:"
+    speedLabel.Text = "Replay Speed:"
     speedLabel.TextSize = 11
     speedLabel.Font = Enum.Font.GothamBold
     speedLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -660,8 +669,8 @@ function GUI:CreateReplayTab(parent)
     local speedButtons = {}
     
     for i, speed in ipairs(speeds) do
-        local speedBtn = self:CreateButton(tostring(speed) .. "x", IsMobile and 55 or 50, 28, COLORS.BG_SECONDARY)
-        speedBtn.Position = UDim2.new(0, 10 + (i-1) * (IsMobile and 72 or 60), 0, 40)
+        local speedBtn = self:CreateButton(tostring(speed) .. "x", 50, 28, COLORS.BG_SECONDARY)
+        speedBtn.Position = UDim2.new(0, 10 + (i-1) * 60, 0, 40)
         speedBtn.Parent = tabFrame
         speedBtn.TextSize = 9
         
@@ -676,15 +685,13 @@ function GUI:CreateReplayTab(parent)
         table.insert(speedButtons, speedBtn)
     end
     
-    local startReplayBtn = self:CreateButton("START", 80, 45, COLORS.SUCCESS)
+    local startReplayBtn = self:CreateButton("START", 75, 40, COLORS.SUCCESS)
     startReplayBtn.Position = UDim2.new(0, 20, 0, 85)
     startReplayBtn.Parent = tabFrame
-    startReplayBtn.TextSize = 11
     
-    local stopReplayBtn = self:CreateButton("STOP", 80, 45, COLORS.ERROR)
-    stopReplayBtn.Position = UDim2.new(0, IsMobile and 110 or 130, 0, 85)
+    local stopReplayBtn = self:CreateButton("STOP", 75, 40, COLORS.ERROR)
+    stopReplayBtn.Position = UDim2.new(0, 105, 0, 85)
     stopReplayBtn.Parent = tabFrame
-    stopReplayBtn.TextSize = 11
     
     startReplayBtn.MouseButton1Click:Connect(function()
         if next(State.macroData) then
@@ -707,8 +714,8 @@ function GUI:CreateStorageTab(parent)
     tabFrame.Parent = parent
     
     local listFrame = Instance.new("Frame")
-    listFrame.Size = UDim2.new(1, -20, 1, -60)
-    listFrame.Position = UDim2.new(0, 10, 0, 50)
+    listFrame.Size = UDim2.new(1, -20, 1, -50)
+    listFrame.Position = UDim2.new(0, 10, 0, 10)
     listFrame.BackgroundColor3 = COLORS.BG_SECONDARY
     listFrame.BorderSizePixel = 0
     listFrame.CornerRadius = UDim.new(0, 8)
@@ -761,8 +768,8 @@ function GUI:PopulateMacroList(parent)
         nameLabel.TextXAlignment = Enum.TextXAlignment.Left
         nameLabel.Parent = itemFrame
         
-        local loadBtn = self:CreateButton("LOAD", IsMobile and 40 or 45, 32, COLORS.NEON_BLUE)
-        loadBtn.Position = UDim2.new(1, IsMobile and -100 or -150, 0.5, -16)
+        local loadBtn = self:CreateButton("LOAD", 40, 32, COLORS.NEON_BLUE)
+        loadBtn.Position = UDim2.new(1, -95, 0.5, -16)
         loadBtn.Parent = itemFrame
         loadBtn.TextSize = 8
         
@@ -770,8 +777,8 @@ function GUI:PopulateMacroList(parent)
             Replay:Start(macroId)
         end)
         
-        local delBtn = self:CreateButton("DEL", IsMobile and 40 or 45, 32, COLORS.ERROR)
-        delBtn.Position = UDim2.new(1, IsMobile and -50 or -100, 0.5, -16)
+        local delBtn = self:CreateButton("DEL", 40, 32, COLORS.ERROR)
+        delBtn.Position = UDim2.new(1, -45, 0.5, -16)
         delBtn.Parent = itemFrame
         delBtn.TextSize = 8
         
@@ -783,7 +790,7 @@ function GUI:PopulateMacroList(parent)
         yOffset = yOffset + 55
     end
     
-    parent.CanvasSize = UDim2.new(0, 0, 0, math.max(yOffset, 200))
+    parent.CanvasSize = UDim2.new(0, 0, 0, math.max(yOffset, 100))
 end
 
 function GUI:CreateShortcutTab(parent)
@@ -799,7 +806,7 @@ function GUI:CreateShortcutTab(parent)
     infoLabel.Position = UDim2.new(0, 10, 0, 10)
     infoLabel.BackgroundTransparency = 1
     infoLabel.TextColor3 = COLORS.TEXT_PRIMARY
-    infoLabel.Text = "🎯 SHORTCUT BAR\n\nVisible at bottom-left\n\n● = Record\n⏹ = Stop Record\n▶ = Replay\n⟲ = Rollback\n⏻ = Stop Replay\n\n✋ Drag & Drop\n📱 Full Mobile Support"
+    infoLabel.Text = "🎯 SHORTCUT BAR (Bottom-Left)\n\n● = Record\n⏹ = Stop Record\n▶ = Replay\n⟲ = Rollback\n⏻ = Stop Replay\n\n✋ Drag to move"
     infoLabel.TextSize = 11
     infoLabel.Font = Enum.Font.Gotham
     infoLabel.TextWrapped = true
@@ -816,24 +823,13 @@ function GUI:CreateSettingsTab(parent)
     tabFrame.Visible = false
     tabFrame.Parent = parent
     
-    local settingsLabel = Instance.new("TextLabel")
-    settingsLabel.Size = UDim2.new(1, -20, 0, 30)
-    settingsLabel.Position = UDim2.new(0, 10, 0, 10)
-    settingsLabel.BackgroundTransparency = 1
-    settingsLabel.TextColor3 = COLORS.NEON_PURPLE
-    settingsLabel.Text = "ℹ️ INFORMATION"
-    settingsLabel.TextSize = 13
-    settingsLabel.Font = Enum.Font.GothamBold
-    settingsLabel.TextXAlignment = Enum.TextXAlignment.Left
-    settingsLabel.Parent = tabFrame
-    
     local aboutLabel = Instance.new("TextLabel")
-    aboutLabel.Size = UDim2.new(1, -20, 1, -60)
-    aboutLabel.Position = UDim2.new(0, 10, 0, 50)
+    aboutLabel.Size = UDim2.new(1, -20, 1, 0)
+    aboutLabel.Position = UDim2.new(0, 10, 0, 10)
     aboutLabel.BackgroundTransparency = 1
     aboutLabel.TextColor3 = COLORS.TEXT_SECONDARY
-    aboutLabel.Text = "DELTA MACRO HUB v2.0\n━━━━━━━━━━━━━━━\n✨ Features:\n• 100 FPS Recording\n• Smooth Replay\n• Auto Reconnect\n• Session Keeper\n• Rollback System\n• Mobile Optimized\n\n📱 Device: " .. (IsMobile and "MOBILE" or "PC") .. "\n📂 Folder: workspace Delta\n⌨️ Unload: Alt+Q"
-    aboutLabel.TextSize = 9
+    aboutLabel.Text = "DELTA MACRO HUB v2.1\n━━━━━━━━━━━━\n✨ Features:\n• 100 FPS Recording\n• Smooth Replay Engine\n• Auto Reconnect\n• Session Keeper\n• Rollback System\n• Mobile Optimized\n\n📱 Device: " .. (IsMobile and "MOBILE" or "PC") .. "\n📂 Storage: workspace Delta\n⌨️ Unload: Alt+Q"
+    aboutLabel.TextSize = 10
     aboutLabel.Font = Enum.Font.Gotham
     aboutLabel.TextWrapped = true
     aboutLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -844,8 +840,8 @@ end
 function GUI:SelectTab(tabName)
     if self.currentTab == tabName then return end
     
-    local screenGui = self.mainFrame.Parent
-    local contentFrame = screenGui:FindFirstChild("MainFrame"):FindFirstChild("ContentFrame")
+    local contentFrame = self.mainFrame:FindFirstChild("ContentFrame")
+    if not contentFrame then return end
     
     for _, tab in ipairs(contentFrame:GetChildren()) do
         if tab:IsA("Frame") and tab.Name:match("Tab$") then
@@ -872,9 +868,9 @@ function GUI:MakeDraggable(frame, dragPart)
     
     dragPart.InputBegan:Connect(function(input, processed)
         if processed then return end
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or (IsMobile and input.UserInputType == Enum.UserInputType.Touch) then
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = true
-            dragStart = IsMobile and input.Position or UserInputService:GetMouseLocation()
+            dragStart = UserInputService:GetMouseLocation()
             frameStart = frame.Position
         end
     end)
@@ -888,7 +884,7 @@ function GUI:MakeDraggable(frame, dragPart)
     end)
     
     UserInputService.InputEnded:Connect(function(input, processed)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or (IsMobile and input.UserInputType == Enum.UserInputType.Touch) then
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = false
         end
     end)
@@ -898,7 +894,6 @@ function GUI:Minimize()
     if self.mainFrame then
         self.mainFrame:TweenSize(UDim2.new(0, 0, 0, 0), Enum.EasingDirection.InOut, Enum.EasingStyle.Quad, 0.3, true)
         self.mainFrame.Visible = false
-        self.isOpen = false
         self:ShowFloatingIcon()
     end
 end
@@ -908,7 +903,6 @@ function GUI:Close()
 end
 
 function GUI:ShowFloatingIcon()
-    local screenGui = self.mainFrame.Parent
     local floatingFrame = Instance.new("Frame")
     floatingFrame.Name = "FloatingIcon"
     floatingFrame.Size = UDim2.new(0, 60, 0, 60)
@@ -916,7 +910,7 @@ function GUI:ShowFloatingIcon()
     floatingFrame.BackgroundColor3 = COLORS.NEON_PURPLE
     floatingFrame.BorderSizePixel = 0
     floatingFrame.CornerRadius = UDim.new(0, 30)
-    floatingFrame.Parent = screenGui
+    floatingFrame.Parent = self.screenGui
     
     local icon = Instance.new("TextLabel")
     icon.Size = UDim2.new(1, 0, 1, 0)
@@ -931,7 +925,7 @@ function GUI:ShowFloatingIcon()
     
     local clickConnection
     clickConnection = floatingFrame.InputBegan:Connect(function(input, processed)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or (IsMobile and input.UserInputType == Enum.UserInputType.Touch) then
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
             self:Restore(floatingFrame)
             clickConnection:Disconnect()
         end
@@ -942,8 +936,7 @@ function GUI:Restore(floatingIcon)
     if self.mainFrame then
         floatingIcon:Destroy()
         self.mainFrame.Visible = true
-        self.mainFrame:TweenSize(UDim2.new(0, IsMobile and 400 or 500, 0, IsMobile and 550 or 600), Enum.EasingDirection.InOut, Enum.EasingStyle.Quad, 0.3, true)
-        self.isOpen = true
+        self.mainFrame:TweenSize(UDim2.new(0, IsMobile and 380 or 500, 0, IsMobile and 520 or 600), Enum.EasingDirection.InOut, Enum.EasingStyle.Quad, 0.3, true)
     end
 end
 
@@ -954,12 +947,12 @@ end
 local ShortcutBar = {}
 
 function ShortcutBar:Create()
-    local screenGui = Player:WaitForChild("PlayerGui"):FindFirstChild("MacroHubGui")
+    local screenGui = GUI.screenGui
     if not screenGui then return end
     
     local shortcutFrame = Instance.new("Frame")
     shortcutFrame.Name = "ShortcutBar"
-    shortcutFrame.Size = UDim2.new(0, IsMobile and 290 or 210, 0, 60)
+    shortcutFrame.Size = UDim2.new(0, 260, 0, 60)
     shortcutFrame.Position = UDim2.new(0, 10, 1, -80)
     shortcutFrame.BackgroundColor3 = COLORS.BG_SECONDARY
     shortcutFrame.BorderSizePixel = 0
@@ -968,8 +961,8 @@ function ShortcutBar:Create()
     
     GUI:MakeDraggable(shortcutFrame, shortcutFrame)
     
-    local btnSize = IsMobile and 45 or 40
-    local spacing = IsMobile and 8 or 5
+    local btnSize = 40
+    local spacing = 5
     
     local recordBtn = GUI:CreateButton("●", btnSize, btnSize, COLORS.SUCCESS)
     recordBtn.Position = UDim2.new(0, spacing, 0.5, -btnSize/2)
@@ -1008,6 +1001,8 @@ function ShortcutBar:Create()
     stopReplayBtn.MouseButton1Click:Connect(function()
         if State.isReplaying then Replay:Stop() end
     end)
+    
+    print("[MacroHub] ✓ Shortcut Bar Created!")
 end
 
 -- ════════════════════════════════════════════════════════════════
@@ -1015,22 +1010,28 @@ end
 -- ════════════════════════════════════════════════════════════════
 
 local function Initialize()
-    print(" ")
+    print("")
     print("╔════════════════════════════════════════╗")
-    print("║   DELTA MACRO HUB v2.0 MOBILE          ║")
-    print("║   Platform: " .. (IsMobile and "📱 MOBILE" or "🖥️ PC ") .. "              ║")
+    print("║   DELTA MACRO HUB v2.1 FIXED           ║")
+    print("║   " .. (IsMobile and "📱 MOBILE" or "🖥️ PC ") .. "                    ║")
     print("╚════════════════════════════════════════╝")
-    print(" ")
+    print("")
+    
+    wait(0.5) -- Wait for UI to load
     
     GUI:Create()
+    wait(0.3)
     ShortcutBar:Create()
+    
     AutoReconnect:Initialize()
     SessionKeeper:Start()
     Storage:LoadAllMacros()
     
-    print("[MacroHub] ✓ Ready!")
-    print("[MacroHub] Alt+Q = Unload")
-    print(" ")
+    print("[MacroHub] ═══════════════════════════════")
+    print("[MacroHub] ✓ All systems loaded!")
+    print("[MacroHub] ⌨️  Hotkey: Alt+Q to unload")
+    print("[MacroHub] ═══════════════════════════════")
+    print("")
 end
 
 Player.CharacterAdded:Connect(function(newCharacter)
@@ -1053,9 +1054,11 @@ closeConnection = UserInputService.InputBegan:Connect(function(input, processed)
             pcall(function() conn:Disconnect() end)
         end
         closeConnection:Disconnect()
-        local playerGui = Player:WaitForChild("PlayerGui")
-        local macroGui = playerGui:FindFirstChild("MacroHubGui")
-        if macroGui then macroGui:Destroy() end
+        
+        if GUI.screenGui then
+            GUI.screenGui:Destroy()
+        end
+        
         print("[MacroHub] ✓ Script unloaded!")
     end
 end)
